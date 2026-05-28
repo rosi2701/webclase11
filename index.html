@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>cuack</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&family=League+Gothic&display=swap');
+
+
+            *{ 
+                margin:0;
+                padding:0;
+            }
+
+            :root{
+                --fondo:#6500B3;
+                --figura:#009405;
+                --destaque:black;
+                --textos1: "League Gothic", sans-serif;
+                --textos2: "Jost", sans-serif;
+
+            }
+
+            body {
+                font-family: var(--textos2);
+                color: var(--figura);
+                background: var(--fondo);
+            }
+
+            h1 {
+                text-align: center;
+                font-family: var(--textos1);
+                font-size: calc(1rem + 2vw + 2vh);
+                margin: 2vw auto;
+                
+            }
+
+            h2{
+                margin:3rem 0 1rem 0;
+                font-family: var(--textos1);
+            }
+
+            #escondido{
+                display: none;
+            }
+
+            div.contenedor{ 
+                width: calc(100% - 6%);
+                max-width: 600px;
+                margin: 5% auto;
+                padding: 3%;
+                background: white;
+                box-shadow: 0 0 3px gray;
+                border-radius: 10px;
+                /*text-align: center;*/
+            }
+                
+
+            ul { /* la coma es para que se aplique en esos dos elemetnos*/
+                list-style-position: inside;
+                list-style: none;
+                width: 100%;
+                margin: 1rem 0;
+                border-top: 3px solid var(--fondo)
+            }
+            ul li {
+                border-bottom:1px solid var(--fondo);
+                padding:.6rem 0;
+            }
+            ul li:last-child {
+                border-bottom: 3px solid var(--fondo);
+                
+            }
+            ul li a {
+                margin-right: 2%;
+                text-decoration: none;
+                color: var(--destaque);
+                transition: all ease 1s;
+            }
+            ul li a:hover {
+                letter-spacing: .1rem;
+                transition: all ease .5s;
+            }
+
+            #first {
+              display: block;
+            }
+
+            #second {
+              display: none;
+            }
+
+            @media screen and (min-width: 600px) {
+              #first {
+                display: none;
+              }
+
+              #second {
+                display: block;
+              }
+            }
+            .tiny {
+                width: 2rem;
+                height: auto;
+                border-radius: 50% 50%;
+                margin-right: 0.5rem;
+            }
+
+            .filtro-wrapper {
+                margin-top: 1rem;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="contenedor">
+            <h1>Aves de Chile</h1>
+            <p>Chile alberga una gran variedad de aves gracias a la diversidad de sus ecosistemas. Sin embargo, no todas se encuentran en igual situación frente a las amenazas del entorno. A continuación, se mostrarán agrupadas las aves según su estado de conservación de acuerdo con la IUCN.</p>
+
+            <div class="filtro-wrapper">
+                <label for="filtro-especie">Aves:</label>
+                <select id="filtro-especie">
+                    <option value="">— Selecciona un grupo —</option>
+                </select>
+            </div>
+
+            <div id="resultado"></div>
+
+        </div>
+
+        <script>
+           let todasLasAves = [];
+            const select = document.getElementById("filtro-especie");
+
+
+            fetch("https://api.myjson.online/v1/records/b4cc6491-a885-4cf0-8760-c06ccd90e3ce")
+                .then((respuesta) => {
+                    if (!respuesta.ok) {
+                        throw new Error("Error HTTP: " + respuesta.status);
+                    }
+                    return respuesta.json();
+                })
+                .then((datos) => {
+                    todasLasAves = datos.data;
+                    const ordenes = [...new Set(todasLasAves.map(x => x.info?.iucn?.value))].sort();
+                    ordenes.forEach((o) => {
+                        const option = document.createElement("option");
+                        option.value = o;
+                        option.textContent = o;
+                        select.appendChild(option);
+                    });
+                })
+                .catch((error) => {
+                    console.error("Algo salió mal:", error);
+                });
+
+            function renderizarAves(ordenSeleccionado) {
+                const resultado = document.getElementById("resultado");
+                resultado.innerHTML = "";
+
+                if (!ordenSeleccionado) return;
+
+                const filtradas = todasLasAves.filter(x => x.info?.iucn?.value === ordenSeleccionado);
+
+                resultado.innerHTML += `<h2>${ordenSeleccionado}</h2>`;
+                resultado.innerHTML += `<ol id="lista-aves"></ol>`;
+
+                filtradas.forEach((x) => {
+                    document.getElementById("lista-aves").innerHTML += `<li><img src="${x.image.url}" class="tiny"/>${x.names.spanish}</li>`;
+                });
+            }
+
+            select.addEventListener("change", function () {
+                renderizarAves(this.value);
+            });
+        </script>
+    </body>
+</html>
